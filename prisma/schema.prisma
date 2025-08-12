@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Foydalanuvchi modeli - Telegram bot orqali ro'yxatdan o'tgan foydalanuvchilar
+// Avvalgi versiyada faqat Trip va Vehicle modellari bor edi
+// Yangi versiyada User modeli asosiy bo'lib, Order va UserSession bilan bog'langan
+model User {
+  id            Int          @id @default(autoincrement())
+  telegramId    String       @unique // Telegram foydalanuvchi ID si
+  username      String?      // Telegram username (@nickname)
+  firstName     String?      // Telegram first name
+  lastName      String?      // Telegram last name
+  fullName      String       // To'liq ism (buyurtma uchun)
+  phone         String       // Telefon raqami
+  languageCode  String?      // Telegram foydalanuvchi tili: 'uz', 'ru', 'en'
+  isBot         Boolean      @default(false) // Agar bot bo'lsa (odatda false bo'ladi)
+  role          UserRole     @default(USER)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Bog'lanishlar
+  orders        Order[]      // Foydalanuvchining buyurtmalari
+  sessions      UserSession[] // Foydalanuvchining sessiyalari
+}
+
+// Foydalanuvchi roli
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Buyurtma modeli - taksi buyurtmalari uchun
+// Avvalgi versiyada buyurtmalar xotirada saqlanardi (OrderStorageService)
+// Yangi versiyada barcha buyurtmalar ma'lumotlar bazasida saqlanadi
+model Order {
+  id            String       @id @default(cuid()) // Unique buyurtma ID si
+  orderNumber   String       @unique // ORD-000001 formatida
+  userId        Int          // Foydalanuvchi ID si
+  user          User         @relation(fields: [userId], references: [id])
+  
+  // Buyurtma ma'lumotlari
+  fromRegion    String       // Qayerdan (masalan: Toshkent)
+  fromDistrict  String?      // Tuman (masalan: Chilonzor)
+  toRegion      String       // Qayerga (masalan: Xorazm)
+  toDistrict    String?      // Tuman (masalan: Urganch)
+  
+  // Foydalanuvchi ma'lumotlari
+  customerName  String       // Mijoz ismi
+  customerPhone String       // Mijoz telefoni
+  
+  // Buyurtma holati
+  status        OrderStatus  @default(PENDING)
+  
+  // Vaqt ma'lumotlari
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  // Qo'shimcha ma'lumotlar
+  notes         String?      // Izohlar
+  price         Float?       // Narx
+}
+
+// Buyurtma holati
+enum OrderStatus {
+  PENDING      // Kutilmoqda
+  CONFIRMED    // Tasdiqlangan
+  COMPLETED    // Bajarilgan
+  CANCELLED    // Bekor qilingan
+}
+
+// Foydalanuvchi sessiyasi - bot sessiyalari uchun
+// Avvalgi versiyada session middleware orqali xotirada saqlanardi
+// Yangi versiyada session ma'lumotlari ham ma'lumotlar bazasida saqlanadi
+model UserSession {
+  id            Int          @id @default(autoincrement())
+  userId        Int          // Foydalanuvchi ID si
+  user          User         @relation(fields: [userId], references: [id])
+  
+  // Session ma'lumotlari
+  sessionData   String       // JSON formatida session ma'lumotlari
+  step          String?      // Hozirgi qadam
+  direction     String?      // Yo'nalish (from, to, xorazm_to_tashkent, tashkent_to_xorazm)
+  awaitingInput String?      // Qanday ma'lumot kutilayotgani
+  
+  // Vaqt ma'lumotlari
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  expiresAt     DateTime?    // Session tugash vaqti
+}
+
+// Bot statistikasi - bot ishlash statistikasi uchun
+// Avvalgi versiyada statistika xotirada hisoblanardi
+// Yangi versiyada barcha statistika ma'lumotlar bazasida saqlanadi
+model BotStatistics {
+  id            Int          @id @default(autoincrement())
+  
+  // Asosiy statistika
+  totalUsers    Int          @default(0) // Jami foydalanuvchilar
+  totalOrders   Int          @default(0) // Jami buyurtmalar
+  pendingOrders Int          @default(0) // Kutilayotgan buyurtmalar
+  confirmedOrders Int        @default(0) // Tasdiqlangan buyurtmalar
+  completedOrders Int         @default(0) // Bajarilgan buyurtmalar
+  cancelledOrders Int         @default(0) // Bekor qilingan buyurtmalar
+  
+  // Vaqt ma'lumotlari
+  botLaunchDate DateTime     @default(now()) // Bot ishga tushgan sana
+  lastActivity  DateTime     @default(now()) // Oxirgi faollik
+  
+  // Kunlik statistika (JSON formatida)
+  dailyStats    String?      // Kunlik statistika ma'lumotlari
+  
+  // Yangilash vaqti
+  updatedAt     DateTime     @updatedAt
+}
