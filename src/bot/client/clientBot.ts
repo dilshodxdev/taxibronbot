@@ -52,7 +52,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
 
   // Operator bilan bog'lanish tugmasi
   bot.hears("👤 Operator bilan bog'lanish", async (ctx) => {
-    await ctx.reply("👤 Operator bilan bog'lanish uchun @admin_username ga yozing");
+    await ctx.reply("👤 Operator bilan bog'lanish uchun @taxibronbot_admin ga yozing");
   });
 
   // Mening buyurtmalarim tugmasi
@@ -174,7 +174,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
    5. Telefon raqamingizni kiriting
 
 📞 <b>Qo'llab-quvvatlash:</b>
-   Admin bilan bog'lanish uchun @admin_username ga yozing
+   Admin bilan bog'lanish uchun @taxibronbot_admin ga yozing
 
 🔄 <b>Boshqa buyruqlar:</b>
    /start - Bosh menyu
@@ -185,7 +185,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
   });
 
   bot.action("contact_operator", async (ctx) => {
-    await ctx.reply("👤 Operator bilan bog'lanish uchun @admin_username ga yozing yoki /start buyrug'ini bering.");
+    await ctx.reply("👤 Operator bilan bog'lanish uchun @taxibronbot_admin ga yozing yoki /start buyrug'ini bering.");
   });
 
   // Help buyrug'i - to'g'ridan-to'g'ri /help yozganda
@@ -201,7 +201,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
    5. Telefon raqamingizni kiriting
 
 📞 <b>Qo'llab-quvvatlash:</b>
-   Admin bilan bog'lanish uchun @admin_username ga yozing
+   Admin bilan bog'lanish uchun @taxibronbot_admin ga yozing
 
 🔄 <b>Boshqa buyruqlar:</b>
    /start - Bosh menyu
