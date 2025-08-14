@@ -1,5 +1,5 @@
-import { PrismaClient } from '../generated/prisma';
-import { OrderStatus } from '../generated/prisma';
+import { PrismaClient } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 
 // Ma'lumotlar bazasi xizmati - Prisma ORM orqali barcha database operatsiyalarni boshqaradi
 // Avvalgi versiyada OrderStorageService xotirada ma'lumotlarni saqlardi
