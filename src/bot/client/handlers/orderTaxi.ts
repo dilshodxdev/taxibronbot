@@ -1,13 +1,13 @@
 import { Scenes, Markup } from "telegraf";
 import { MyContext } from "../types/context";
 import { DatabaseService } from "../../../services/database";
+import { logger } from "../../../services/logger";
+import { formatPhone } from "../../../utils/utils";
 import { CONFIG } from "../../../config";
 import { tashkentDistrictsKeyboard } from "../keyboards/tashkentDistricts";
 import { xorazmDistrictsKeyboard } from "../keyboards/xorazmDistricts";
 import { fromRegionsKeyboard } from "../keyboards/fromRegions";
 import { TASHKENT_DISTRICTS, XORAZM_DISTRICTS, REGIONS } from "./districtMap";
-
-import { bot } from "../../../main"; // bot yaratilgan joydan import qilamiz
 
 // Database service ni olish
 const databaseService = DatabaseService.getInstance();
@@ -366,17 +366,9 @@ function createRegionKeyboard(prefix: string) {
   return Markup.inlineKeyboard(buttons);
 }
 
-// Telefon raqamini tekshirish va formatlash
+// Telefon raqamini tekshirish - to'g'rilangan versiya
 function isValidPhone(phone: string): boolean {
-  // +998 bilan boshlanadi va 12 ta raqam bo'lishi kerak
-  const phoneRegex = /^\+998\d{9}$/;
-
-  // Agar +998 yo'q bo'lsa, qo'shish
-  if (!phone.startsWith("+998") && phone.length == 9) {
-    phone = "+998" + phone;
-  }
-
-  return phoneRegex.test(phone);
+  return formatPhone(phone) !== null;
 }
 
 // Buyurtma xulosasini ko'rsatish va saqlash
@@ -465,12 +457,11 @@ async function showOrderSummary(ctx: MyContext) {
 🆔 <b>Buyurtma raqami:</b> ${order.orderNumber}
 👤 <b>Ism:</b> ${session.fullName}
 📞 <b>Telefon:</b> ${session.phone}
-📍 <b>Yo'nalish:</b> ${session.fromRegion}${
-    session.fromDistrict ? ` - ${session.fromDistrict}` : ""
-  } → ${session.toRegion}${session.toDistrict ? ` - ${session.toDistrict}` : ""}
+📍 <b>Yo'nalish:</b> ${session.fromRegion}${session.fromDistrict ? ` - ${session.fromDistrict}` : ""
+    } → ${session.toRegion}${session.toDistrict ? ` - ${session.toDistrict}` : ""}
 ⏰ <b>Vaqt:</b> ${new Date().toLocaleString("uz-UZ", {
-    timeZone: "Asia/Tashkent",
-  })}
+      timeZone: "Asia/Tashkent",
+    })}
 📊 <b>Holat:</b> ⏳ Kutilmoqda
 
 ✅ Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanishadi.
@@ -505,12 +496,10 @@ async function showOrderSummary(ctx: MyContext) {
 👤 <b>Mijoz:</b> ${session.fullName || "—"}
 📞 ${phone ? `+${phone}` : "—"}
 
-📍 <b>Yo'nalish:</b> ${session.fromRegion || "—"}${
-      session.fromDistrict ? ` - ${session.fromDistrict}` : ""
-    }
- → ${session.toRegion || "—"}${
-      session.toDistrict ? ` - ${session.toDistrict}` : ""
-    }
+📍 <b>Yo'nalish:</b> ${session.fromRegion || "—"}${session.fromDistrict ? ` - ${session.fromDistrict}` : ""
+      }
+ → ${session.toRegion || "—"}${session.toDistrict ? ` - ${session.toDistrict}` : ""
+      }
 `;
 
     const inlineKeyboard: any[] = [];
@@ -533,18 +522,7 @@ async function showOrderSummary(ctx: MyContext) {
     });
   }
 
-  // Callback queryga alohida listener
-  bot.on("callback_query", async (ctx) => {
-    if (
-      "data" in ctx.callbackQuery &&
-      ctx.callbackQuery.data?.startsWith("show_number_")
-    ) {
-      const phone = ctx.callbackQuery.data.replace("show_number_", "");
-      await ctx.reply(`📞 Telefon raqami: +${phone}`);
-      await ctx.answerCbQuery();
-    }
-  });
-  // Adminga xabar jo'natish  //////////////////////////////////////////////////////////////////
+  // Adminga xabar jo'natish yakunlandi
 
   // Yakuniy xabar - operatorimiz siz bilan tez orada bog'lanadi
   await ctx.reply("Operatorimiz siz bilan tez orada bog'lanadi.");

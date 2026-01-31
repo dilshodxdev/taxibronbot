@@ -1,6 +1,8 @@
 import { Telegraf, Markup } from "telegraf";
 import { MyContext } from "./types/context";
 import { DatabaseService } from "../../services/database";
+import { logger } from "../../services/logger";
+import { getStatusEmoji, getStatusText } from "../../utils/utils";
 import { CONFIG } from "../../config";
 import { fromDistrictsKeyboard } from "./keyboards/fromDistricts";
 import { fromRegionsKeyboard } from "./keyboards/fromRegions";
@@ -42,7 +44,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
 
   // Reply keyboard tugmalarini qayta ishlash
   // Bu tugmalar foydalanuvchi tomonidan bosilganda ishga tushadi
-  
+
   // Taxi buyurtma qilish tugmasi
   bot.hears("🚕 Taksi buyurtma qilish", async (ctx) => {
     // Yangi wizard scene ni ishga tushirish - bu foydalanuvchi buyurtma jarayonini to'liq boshqaradi
@@ -59,12 +61,12 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
   bot.hears("🧾 Mening buyurtmalarim", async (ctx) => {
     if (ctx.from?.id) {
       const userOrders = await databaseService.getOrdersByUserId(ctx.from.id.toString());
-      
+
       if (userOrders.length === 0) {
         await ctx.reply("📝 Sizda hali buyurtmalar yo'q. Yangi buyurtma qilish uchun '🚕 Taxi buyurtma qilish' tugmasini bosing.");
       } else {
         let ordersMessage = "📝 <b>Sizning buyurtmalaringiz:</b>\n\n";
-        
+
         userOrders.forEach((order: any, index: number) => {
           const statusEmoji = getStatusEmoji(order.status);
           const time = order.createdAt.toLocaleString("uz-UZ", {
@@ -75,13 +77,13 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
             hour: "2-digit",
             minute: "2-digit"
           });
-          
+
           ordersMessage += `${index + 1}. ${statusEmoji} <b>${order.orderNumber}</b>\n`;
           ordersMessage += `📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n`;
           ordersMessage += `⏰ <b>Vaqt:</b> ${time}\n`;
           ordersMessage += `📊 <b>Holat:</b> ${getStatusText(order.status)}\n\n`;
         });
-        
+
         await ctx.reply(ordersMessage, { parse_mode: "HTML" });
       }
     } else {
@@ -121,7 +123,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
 
   // Xavfsizlik uchun callback handler lar qo'shamiz - agar wizard scene ishlamasa
   // Bu handler lar wizard scene da callback query kelganda ishga tushadi
-  
+
   // Region tanlash callback lari - barcha viloyatlar uchun
   bot.action(/^region_(.+)$/, async (ctx) => {
     if ('data' in ctx.callbackQuery) {
@@ -211,24 +213,5 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
     await ctx.reply(helpMessage, { parse_mode: "HTML" });
   });
 
-  // Yordamchi funksiyalar
-  function getStatusEmoji(status: string): string {
-    switch (status) {
-      case 'PENDING': return '⏳';
-      case 'CONFIRMED': return '✅';
-      case 'COMPLETED': return '🎉';
-      case 'CANCELLED': return '❌';
-      default: return '❓';
-    }
-  }
-
-  function getStatusText(status: string): string {
-    switch (status) {
-      case 'PENDING': return 'Kutilmoqda';
-      case 'CONFIRMED': return 'Tasdiqlangan';
-      case 'COMPLETED': return 'Bajarilgan';
-      case 'CANCELLED': return 'Bekor qilingan';
-      default: return 'Noma\'lum';
-    }
-  }
+  // Yordamchi funksiyalar - utils modulidan import qilingan
 }

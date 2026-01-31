@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupClientBot = setupClientBot;
 const telegraf_1 = require("telegraf");
 const database_1 = require("../../services/database");
+const utils_1 = require("../../utils/utils");
 // Client bot sozlamalari va boshqaruvi
 // Avvalgi versiyada OrderStorageService xotirada ma'lumotlarni saqlardi
 // Yangi versiyada DatabaseService orqali barcha ma'lumotlar ma'lumotlar bazasida saqlanadi
@@ -52,7 +53,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
             else {
                 let ordersMessage = "📝 <b>Sizning buyurtmalaringiz:</b>\n\n";
                 userOrders.forEach((order, index) => {
-                    const statusEmoji = getStatusEmoji(order.status);
+                    const statusEmoji = (0, utils_1.getStatusEmoji)(order.status);
                     const time = order.createdAt.toLocaleString("uz-UZ", {
                         timeZone: "Asia/Tashkent",
                         day: "2-digit",
@@ -64,7 +65,7 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
                     ordersMessage += `${index + 1}. ${statusEmoji} <b>${order.orderNumber}</b>\n`;
                     ordersMessage += `📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n`;
                     ordersMessage += `⏰ <b>Vaqt:</b> ${time}\n`;
-                    ordersMessage += `📊 <b>Holat:</b> ${getStatusText(order.status)}\n\n`;
+                    ordersMessage += `📊 <b>Holat:</b> ${(0, utils_1.getStatusText)(order.status)}\n\n`;
                 });
                 await ctx.reply(ordersMessage, { parse_mode: "HTML" });
             }
@@ -180,23 +181,5 @@ Taksi buyurtma qilish uchun quyidagi tugmalardan birini tanlang:
     `;
         await ctx.reply(helpMessage, { parse_mode: "HTML" });
     });
-    // Yordamchi funksiyalar
-    function getStatusEmoji(status) {
-        switch (status) {
-            case 'PENDING': return '⏳';
-            case 'CONFIRMED': return '✅';
-            case 'COMPLETED': return '🎉';
-            case 'CANCELLED': return '❌';
-            default: return '❓';
-        }
-    }
-    function getStatusText(status) {
-        switch (status) {
-            case 'PENDING': return 'Kutilmoqda';
-            case 'CONFIRMED': return 'Tasdiqlangan';
-            case 'COMPLETED': return 'Bajarilgan';
-            case 'CANCELLED': return 'Bekor qilingan';
-            default: return 'Noma\'lum';
-        }
-    }
+    // Yordamchi funksiyalar - utils modulidan import qilingan
 }

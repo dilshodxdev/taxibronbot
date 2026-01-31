@@ -1,24 +1,90 @@
-# Loyihaning Muhim Muqaddimasi
+# TaxiBronBot
 
-Ushbu loyiha ishga tushirilishi uchun quyidagi atamalar va ularning qiymatlarini `.env` faylida to‘g‘ri sozlash talab etiladi:
+Telegram taxi booking bot for Uzbekistan.
 
-- **DATABASE_URL**  
-  Loyihaning ma’lumotlar bazasi manzilini ko‘rsatadi. Masalan:  
+## Requirements
 
-Bu yerda `file:` prefiksi bilan SQLite fayl yo‘li ko‘rsatiladi. Agar boshqa turdagi ma’lumotlar bazasidan foydalanilsa, ularga mos URL berilishi kerak.
+- Node.js >= 18.0.0
+- SQLite
 
-- **BOT_TOKEN**  
-Telegram botingiz uchun token. Bot yaratganingizda [Telegram BotFather](https://t.me/BotFather) dan olasiz. Ushbu qiymat maxfiy va hech qachon ommaga oshkor qilinmasligi kerak.
+## Installation
 
-- **CHANNEL_ID**  
-Botning xabar yuborishi yoki kuzatishi kerak bo‘lgan Telegram kanali identifikatori. Bu odatda `-100` bilan boshlanuvchi raqam ko‘rinishida bo‘ladi.
+```bash
+# Dependencies o'rnatish
+npm install
 
-- **ADMIN_ID**  
-Bot ma’muriy huquqiga ega bo‘lgan foydalanuvchi (admin) ning Telegram ID raqami. Bu raqam orqali bot ma’mur uchun maxsus buyruqlarni aniqlaydi.
+# Prisma client generatsiya
+npm run prisma:generate
 
-- **SUPER_ADMIN_ID**  
-Eng yuqori huquqli foydalanuvchi (super admin) Telegram ID-si. U botning barcha funksiyalariga to‘liq kirish huquqiga ega.
+# Database migratsiya
+npm run prisma:migrate
+```
 
----
+## Environment Variables
 
-**Eslatma:** `.env` faylini yaratib, yuqoridagi qiymatlarni to‘g‘ri to‘ldirish loyiha ish faoliyatining muhim qismidir. Maxfiy ma’lumotlar (BOT_TOKEN va ID raqamlar) xavfsiz saqlanishi kerak.
+`.env` faylini yarating:
+
+```env
+BOT_TOKEN=your_bot_token
+ADMIN_ID=your_admin_telegram_id
+SUPER_ADMIN_ID=your_super_admin_telegram_id
+CHANNEL_ID=your_channel_id
+DATABASE_URL=file:./prisma/db/database.db
+```
+
+## Development
+
+```bash
+npm run dev
+```
+
+## Production (VPS)
+
+```bash
+# Build
+npm run build
+
+# Start
+npm start
+```
+
+### PM2 bilan ishga tushirish (Recommended)
+
+```bash
+# PM2 o'rnatish
+npm install -g pm2
+
+# Bot ishga tushirish
+pm2 start dist/main.js --name taxibronbot
+
+# Auto-restart on boot
+pm2 startup
+pm2 save
+
+# Logs ko'rish
+pm2 logs taxibronbot
+
+# Restart
+pm2 restart taxibronbot
+```
+
+## Directory Structure
+
+```
+├── src/
+│   ├── main.ts              # Entry point
+│   ├── config.ts            # Configuration
+│   ├── bot/
+│   │   └── client/          # Bot handlers
+│   ├── services/
+│   │   ├── database.ts      # Prisma database service
+│   │   └── logger.ts        # Error logging
+│   ├── middlewares/
+│   │   └── sceneMiddleware.ts
+│   └── utils/
+│       └── utils.ts
+├── prisma/
+│   └── schema.prisma        # Database schema
+├── logs/                    # Log files
+└── dist/                    # Compiled JS (production)
+```

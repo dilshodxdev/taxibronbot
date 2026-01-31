@@ -4,6 +4,7 @@ exports.setupAdminBot = setupAdminBot;
 const telegraf_1 = require("telegraf");
 const start_1 = require("./handlers/start");
 const database_1 = require("../../../services/database");
+const utils_1 = require("../../../utils/utils");
 const config_1 = require("../../../config");
 // Admin bot sozlamalari va boshqaruvi
 // Avvalgi versiyada faqat e'lon berish funksiyasi bor edi
@@ -133,8 +134,8 @@ function setupAdminBot(bot) {
             }
             let message = `📦 <b>Buyurtmalar (${page}/${result.totalPages})</b>\n\n`;
             result.orders.forEach((order, index) => {
-                const statusEmoji = getStatusEmoji(order.status);
-                const statusText = getStatusText(order.status);
+                const statusEmoji = (0, utils_1.getStatusEmoji)(order.status);
+                const statusText = (0, utils_1.getStatusText)(order.status);
                 const orderDate = new Date(order.createdAt).toLocaleDateString("uz-UZ");
                 message += `${index + 1}. <b>${order.orderNumber}</b>\n`;
                 message += `   👤 ${order.customerName}\n`;
@@ -159,7 +160,7 @@ function setupAdminBot(bot) {
         try {
             const success = await databaseService.updateOrderStatus(orderId, newStatus);
             if (success) {
-                await ctx.reply(`✅ Buyurtma holati yangilandi: ${getStatusText(newStatus)}`);
+                await ctx.reply(`✅ Buyurtma holati yangilandi: ${(0, utils_1.getStatusText)(newStatus)}`);
                 // Statistikani yangilash
                 await databaseService.updateStatistics();
             }
@@ -180,8 +181,8 @@ function setupAdminBot(bot) {
                 await ctx.reply("❌ Buyurtma topilmadi.");
                 return;
             }
-            const statusEmoji = getStatusEmoji(order.status);
-            const statusText = getStatusText(order.status);
+            const statusEmoji = (0, utils_1.getStatusEmoji)(order.status);
+            const statusText = (0, utils_1.getStatusText)(order.status);
             const orderDate = new Date(order.createdAt).toLocaleString("uz-UZ", {
                 timeZone: "Asia/Tashkent",
             });
@@ -272,26 +273,23 @@ ${statusEmoji} <b>Holat:</b> ${statusText}
             const message = `
 📊 <b>Batafsil statistika</b>
 
-📅 <b>Oxirgi 7 kunlik ma'lumotlar:</b>
-   📍 <b>Bugun:</b> ${Math.floor(Math.random() * 10) + 1} ta buyurtma, ${Math.floor(Math.random() * 5) + 1} ta foydalanuvchi
-   📍 <b>Kecha:</b> ${Math.floor(Math.random() * 8) + 1} ta buyurtma, ${Math.floor(Math.random() * 4) + 1} ta foydalanuvchi
-   📍 <b>2 kun oldin:</b> ${Math.floor(Math.random() * 6) + 1} ta buyurtma, ${Math.floor(Math.random() * 3) + 1} ta foydalanuvchi
+📅 <b>Oxirgi ma'lumotlar:</b>
+   📊 <b>Jami foydalanuvchilar:</b> ${stats.totalUsers} ta
+   📦 <b>Jami buyurtmalar:</b> ${stats.totalOrders} ta
 
-🌍 <b>Mintaqa bo'yicha buyurtmalar:</b>
-   🏙️ <b>Toshkent:</b> ${Math.floor(stats.totalOrders * 0.6)} ta
-   🏘️ <b>Xorazm:</b> ${Math.floor(stats.totalOrders * 0.4)} ta
+📊 <b>Buyurtmalar holati:</b>
+   ⏳ <b>Kutilayotgan:</b> ${stats.pendingOrders} ta
+   ✅ <b>Tasdiqlangan:</b> ${stats.confirmedOrders} ta
+   🎯 <b>Bajarilgan:</b> ${stats.completedOrders} ta
+   ❌ <b>Bekor qilingan:</b> ${stats.cancelledOrders} ta
 
-⏰ <b>Vaqt bo'yicha faollik:</b>
-   🌅 <b>Eng faol kun:</b> Dushanba
-   🕐 <b>Eng faol soat:</b> 9:00 - 10:00
+📈 <b>Statistika foizlari:</b>
+   ✅ Bajarilish darajasi: ${stats.totalOrders > 0 ? Math.round((stats.completedOrders / stats.totalOrders) * 100) : 0}%
+   ❌ Bekor qilish darajasi: ${stats.totalOrders > 0 ? Math.round((stats.cancelledOrders / stats.totalOrders) * 100) : 0}%
 
-📱 <b>Qurilma ma'lumotlari:</b>
-   💻 <b>Web versiya:</b> ${Math.floor(stats.totalUsers * 0.1)} ta
-   📱 <b>Mobile app:</b> ${Math.floor(stats.totalUsers * 0.9)} ta
-
-🔍 <b>Qidiruv statistikasi:</b>
-   🔎 <b>Eng ko'p qidirilgan yo'nalish:</b> Toshkent → Xorazm
-   🎯 <b>Eng mashhur yo'nalish:</b> Xorazm → Toshkent
+🔄 <b>Oxirgi yangilanish:</b> ${stats.updatedAt.toLocaleString("uz-UZ", {
+                timeZone: "Asia/Tashkent",
+            })}
       `;
             const keyboard = telegraf_1.Markup.inlineKeyboard([
                 [
@@ -366,35 +364,5 @@ ${statusEmoji} <b>Holat:</b> ${statusText}
         ]);
         return telegraf_1.Markup.inlineKeyboard(keyboard);
     }
-    // ==================== UTILITY FUNCTIONS ====================
-    // Holat emoji sini olish
-    function getStatusEmoji(status) {
-        switch (status) {
-            case "PENDING":
-                return "⏳";
-            case "CONFIRMED":
-                return "✅";
-            case "COMPLETED":
-                return "🎯";
-            case "CANCELLED":
-                return "❌";
-            default:
-                return "❓";
-        }
-    }
-    // Holat matnini olish
-    function getStatusText(status) {
-        switch (status) {
-            case "PENDING":
-                return "Kutilmoqda";
-            case "CONFIRMED":
-                return "Tasdiqlangan";
-            case "COMPLETED":
-                return "Bajarilgan";
-            case "CANCELLED":
-                return "Bekor qilingan";
-            default:
-                return "Noma'lum";
-        }
-    }
+    // Yordamchi funksiyalar - utils modulidan import qilingan
 }

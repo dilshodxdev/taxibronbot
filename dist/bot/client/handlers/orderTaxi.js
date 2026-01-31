@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.orderTaxiScene = void 0;
 const telegraf_1 = require("telegraf");
 const database_1 = require("../../../services/database");
+const utils_1 = require("../../../utils/utils");
 const config_1 = require("../../../config");
 const tashkentDistricts_1 = require("../keyboards/tashkentDistricts");
 const xorazmDistricts_1 = require("../keyboards/xorazmDistricts");
 const fromRegions_1 = require("../keyboards/fromRegions");
 const districtMap_1 = require("./districtMap");
-const main_1 = require("../../../main"); // bot yaratilgan joydan import qilamiz
 // Database service ni olish
 const databaseService = database_1.DatabaseService.getInstance();
 // Matn olish uchun xavfsiz yordamchi funksiya
@@ -283,15 +283,9 @@ function createRegionKeyboard(prefix) {
     }
     return telegraf_1.Markup.inlineKeyboard(buttons);
 }
-// Telefon raqamini tekshirish va formatlash
+// Telefon raqamini tekshirish - to'g'rilangan versiya
 function isValidPhone(phone) {
-    // +998 bilan boshlanadi va 12 ta raqam bo'lishi kerak
-    const phoneRegex = /^\+998\d{9}$/;
-    // Agar +998 yo'q bo'lsa, qo'shish
-    if (!phone.startsWith("+998") && phone.length == 9) {
-        phone = "+998" + phone;
-    }
-    return phoneRegex.test(phone);
+    return (0, utils_1.formatPhone)(phone) !== null;
 }
 // Buyurtma xulosasini ko'rsatish va saqlash
 async function showOrderSummary(ctx) {
@@ -411,16 +405,7 @@ async function showOrderSummary(ctx) {
             reply_markup: { inline_keyboard: inlineKeyboard },
         });
     }
-    // Callback queryga alohida listener
-    main_1.bot.on("callback_query", async (ctx) => {
-        if ("data" in ctx.callbackQuery &&
-            ctx.callbackQuery.data?.startsWith("show_number_")) {
-            const phone = ctx.callbackQuery.data.replace("show_number_", "");
-            await ctx.reply(`📞 Telefon raqami: +${phone}`);
-            await ctx.answerCbQuery();
-        }
-    });
-    // Adminga xabar jo'natish  //////////////////////////////////////////////////////////////////
+    // Adminga xabar jo'natish yakunlandi
     // Yakuniy xabar - operatorimiz siz bilan tez orada bog'lanadi
     await ctx.reply("Operatorimiz siz bilan tez orada bog'lanadi.");
     // Bosh menyuga qaytish

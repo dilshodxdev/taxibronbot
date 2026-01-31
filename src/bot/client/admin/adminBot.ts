@@ -2,6 +2,8 @@ import { Telegraf, Markup } from "telegraf";
 import { MyContext } from "../types/context";
 import { AdminStart } from "./handlers/start";
 import { DatabaseService } from "../../../services/database";
+import { logger } from "../../../services/logger";
+import { getStatusEmoji, getStatusText } from "../../../utils/utils";
 import { CONFIG } from "../../../config";
 
 // Admin bot sozlamalari va boshqaruvi
@@ -146,11 +148,9 @@ export function setupAdminBot(bot: Telegraf<MyContext>) {
         message += `${index + 1}. <b>${order.orderNumber}</b>\n`;
         message += `   👤 ${order.customerName}\n`;
         message += `   📞 ${order.customerPhone}\n`;
-        message += `   📍 ${order.fromRegion}${
-          order.fromDistrict ? ` - ${order.fromDistrict}` : ""
-        } → ${order.toRegion}${
-          order.toDistrict ? ` - ${order.toDistrict}` : ""
-        }\n`;
+        message += `   📍 ${order.fromRegion}${order.fromDistrict ? ` - ${order.fromDistrict}` : ""
+          } → ${order.toRegion}${order.toDistrict ? ` - ${order.toDistrict}` : ""
+          }\n`;
         message += `   📅 ${orderDate}\n`;
         message += `   ${statusEmoji} ${statusText}\n\n`;
       });
@@ -220,9 +220,8 @@ export function setupAdminBot(bot: Telegraf<MyContext>) {
 🆔 <b>Buyurtma raqami:</b> ${order.orderNumber}
 👤 <b>Mijoz:</b> ${order.customerName}
 📞 <b>Telefon:</b> ${order.customerPhone}
-📍 <b>Yo'nalish:</b> ${order.fromRegion}${
-        order.fromDistrict ? ` - ${order.fromDistrict}` : ""
-      } → ${order.toRegion}${order.toDistrict ? ` - ${order.toDistrict}` : ""}
+📍 <b>Yo'nalish:</b> ${order.fromRegion}${order.fromDistrict ? ` - ${order.fromDistrict}` : ""
+        } → ${order.toRegion}${order.toDistrict ? ` - ${order.toDistrict}` : ""}
 📅 <b>Sana va vaqt:</b> ${orderDate}
 ${statusEmoji} <b>Holat:</b> ${statusText}
       `;
@@ -316,32 +315,23 @@ ${statusEmoji} <b>Holat:</b> ${statusText}
       const message = `
 📊 <b>Batafsil statistika</b>
 
-📅 <b>Oxirgi 7 kunlik ma'lumotlar:</b>
-   📍 <b>Bugun:</b> ${Math.floor(Math.random() * 10) + 1} ta buyurtma, ${
-        Math.floor(Math.random() * 5) + 1
-      } ta foydalanuvchi
-   📍 <b>Kecha:</b> ${Math.floor(Math.random() * 8) + 1} ta buyurtma, ${
-        Math.floor(Math.random() * 4) + 1
-      } ta foydalanuvchi
-   📍 <b>2 kun oldin:</b> ${Math.floor(Math.random() * 6) + 1} ta buyurtma, ${
-        Math.floor(Math.random() * 3) + 1
-      } ta foydalanuvchi
+📅 <b>Oxirgi ma'lumotlar:</b>
+   📊 <b>Jami foydalanuvchilar:</b> ${stats.totalUsers} ta
+   📦 <b>Jami buyurtmalar:</b> ${stats.totalOrders} ta
 
-🌍 <b>Mintaqa bo'yicha buyurtmalar:</b>
-   🏙️ <b>Toshkent:</b> ${Math.floor(stats.totalOrders * 0.6)} ta
-   🏘️ <b>Xorazm:</b> ${Math.floor(stats.totalOrders * 0.4)} ta
+📊 <b>Buyurtmalar holati:</b>
+   ⏳ <b>Kutilayotgan:</b> ${stats.pendingOrders} ta
+   ✅ <b>Tasdiqlangan:</b> ${stats.confirmedOrders} ta
+   🎯 <b>Bajarilgan:</b> ${stats.completedOrders} ta
+   ❌ <b>Bekor qilingan:</b> ${stats.cancelledOrders} ta
 
-⏰ <b>Vaqt bo'yicha faollik:</b>
-   🌅 <b>Eng faol kun:</b> Dushanba
-   🕐 <b>Eng faol soat:</b> 9:00 - 10:00
+📈 <b>Statistika foizlari:</b>
+   ✅ Bajarilish darajasi: ${stats.totalOrders > 0 ? Math.round((stats.completedOrders / stats.totalOrders) * 100) : 0}%
+   ❌ Bekor qilish darajasi: ${stats.totalOrders > 0 ? Math.round((stats.cancelledOrders / stats.totalOrders) * 100) : 0}%
 
-📱 <b>Qurilma ma'lumotlari:</b>
-   💻 <b>Web versiya:</b> ${Math.floor(stats.totalUsers * 0.1)} ta
-   📱 <b>Mobile app:</b> ${Math.floor(stats.totalUsers * 0.9)} ta
-
-🔍 <b>Qidiruv statistikasi:</b>
-   🔎 <b>Eng ko'p qidirilgan yo'nalish:</b> Toshkent → Xorazm
-   🎯 <b>Eng mashhur yo'nalish:</b> Xorazm → Toshkent
+🔄 <b>Oxirgi yangilanish:</b> ${stats.updatedAt.toLocaleString("uz-UZ", {
+        timeZone: "Asia/Tashkent",
+      })}
       `;
 
       const keyboard = Markup.inlineKeyboard([
@@ -449,37 +439,5 @@ ${statusEmoji} <b>Holat:</b> ${statusText}
     return Markup.inlineKeyboard(keyboard);
   }
 
-  // ==================== UTILITY FUNCTIONS ====================
-
-  // Holat emoji sini olish
-  function getStatusEmoji(status: string): string {
-    switch (status) {
-      case "PENDING":
-        return "⏳";
-      case "CONFIRMED":
-        return "✅";
-      case "COMPLETED":
-        return "🎯";
-      case "CANCELLED":
-        return "❌";
-      default:
-        return "❓";
-    }
-  }
-
-  // Holat matnini olish
-  function getStatusText(status: string): string {
-    switch (status) {
-      case "PENDING":
-        return "Kutilmoqda";
-      case "CONFIRMED":
-        return "Tasdiqlangan";
-      case "COMPLETED":
-        return "Bajarilgan";
-      case "CANCELLED":
-        return "Bekor qilingan";
-      default:
-        return "Noma'lum";
-    }
-  }
+  // Yordamchi funksiyalar - utils modulidan import qilingan
 }
